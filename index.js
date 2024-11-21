@@ -18,8 +18,8 @@ const IO = socketIo(server, {
 // Middleware to attach user information from handshake query
 IO.use((socket, next) => {
   if (socket.handshake.query) {
-    const callerId = socket.handshake.query.callerId;
-    socket.user = callerId;
+    const userId = socket.handshake.query.userId; // Change `callerId` to `userId`
+    socket.user = userId;
     next();
   }
 });
@@ -31,26 +31,41 @@ IO.on("connection", (socket) => {
 
   // Handle "makeCall" event
   socket.on("makeCall", (data) => {
-    const { calleeId, sdpOffer } = data;
-    socket.to(calleeId).emit("newCall", {
-      callerId: socket.user,
+    const { hostId, sdpOffer } = data; // Change `calleeId` to `hostId`
+    if (!hostId) {
+      socket.emit("error", { message: "Host ID is required." });
+      return;
+    }
+
+    socket.to(hostId).emit("newCall", {
+      userId: socket.user, // Change `callerId` to `userId`
       sdpOffer: sdpOffer,
     });
   });
 
   // Handle "answerCall" event
   socket.on("answerCall", (data) => {
-    const { callerId, sdpAnswer } = data;
-    socket.to(callerId).emit("callAnswered", {
-      callee: socket.user,
+    const { userId, sdpAnswer } = data; // Change `callerId` to `userId`
+    if (!userId) {
+      socket.emit("error", { message: "User ID is required." });
+      return;
+    }
+
+    socket.to(userId).emit("callAnswered", {
+      hostId: socket.user, // Change `callee` to `hostId`
       sdpAnswer: sdpAnswer,
     });
   });
 
   // Handle "IceCandidate" event
   socket.on("IceCandidate", (data) => {
-    const { calleeId, iceCandidate } = data;
-    socket.to(calleeId).emit("IceCandidate", {
+    const { recipientId, iceCandidate } = data; // Generic naming
+    if (!recipientId) {
+      socket.emit("error", { message: "Recipient ID is required." });
+      return;
+    }
+
+    socket.to(recipientId).emit("IceCandidate", {
       sender: socket.user,
       iceCandidate: iceCandidate,
     });
@@ -63,7 +78,6 @@ IO.on("connection", (socket) => {
 });
 
 // Start the server
-server.listen(port, '0.0.0.0', () => {
+server.listen(port, "0.0.0.0", () => {
   console.log(`Server is running on port ${port}`);
 });
-
