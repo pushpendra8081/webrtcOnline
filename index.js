@@ -1,5 +1,7 @@
 const http = require("http");
 const socketIo = require("socket.io");
+const fs = require("fs");
+const path = require("path");
 
 // Get the port from the environment variable or use 5000 as default
 const port = process.env.PORT || 5000;
@@ -14,6 +16,23 @@ const IO = socketIo(server, {
     methods: ["GET", "POST"],
   },
 });
+
+// Log file path
+const logFilePath = path.join(__dirname, "server.log");
+
+// Utility function to log messages
+function logMessage(message) {
+  const timestamp = new Date().toISOString();
+  const logEntry = `[${timestamp}] ${message}\n`;
+
+  // Log to console
+  console.log(logEntry.trim());
+
+  // Append to log file
+  fs.appendFile(logFilePath, logEntry, (err) => {
+    if (err) console.error("Failed to write to log file", err);
+  });
+}
 
 // Store active user and host connections
 let users = {};
@@ -32,7 +51,7 @@ IO.use((socket, next) => {
 
 // Handle socket.io events
 IO.on("connection", (socket) => {
-  console.log(`${socket.user} (${socket.userType}) connected`);
+  logMessage(`${socket.user} (${socket.userType}) connected`);
 
   // Add the socket to the correct group (user or host)
   if (socket.userType === "user") {
@@ -47,13 +66,13 @@ IO.on("connection", (socket) => {
     const calleeSocket = users[calleeId] || hosts[calleeId];
 
     if (calleeSocket) {
-      io.to(calleeSocket).emit("newCall", {
+      IO.to(calleeSocket).emit("newCall", {
         callerId: socket.user,
         sdpOffer: sdpOffer,
       });
-      console.log(`Call request from ${socket.user} to ${calleeId}`);
+      logMessage(`Call request from ${socket.user} to ${calleeId}`);
     } else {
-      console.log(`Target ${calleeId} not online`);
+      logMessage(`Target ${calleeId} not online`);
     }
   });
 
@@ -63,13 +82,13 @@ IO.on("connection", (socket) => {
     const callerSocket = users[callerId] || hosts[callerId];
 
     if (callerSocket) {
-      io.to(callerSocket).emit("callAnswered", {
+      IO.to(callerSocket).emit("callAnswered", {
         callee: socket.user,
         sdpAnswer: sdpAnswer,
       });
-      console.log(`Call answered from ${socket.user} to ${callerId}`);
+      logMessage(`Call answered from ${socket.user} to ${callerId}`);
     } else {
-      console.log(`Target ${callerId} not online`);
+      logMessage(`Target ${callerId} not online`);
     }
   });
 
@@ -79,19 +98,19 @@ IO.on("connection", (socket) => {
     const calleeSocket = users[calleeId] || hosts[calleeId];
 
     if (calleeSocket) {
-      io.to(calleeSocket).emit("IceCandidate", {
+      IO.to(calleeSocket).emit("IceCandidate", {
         sender: socket.user,
         iceCandidate: iceCandidate,
       });
-      console.log(`ICE candidate from ${socket.user} to ${calleeId}`);
+      logMessage(`ICE candidate from ${socket.user} to ${calleeId}`);
     } else {
-      console.log(`Target ${calleeId} not online`);
+      logMessage(`Target ${calleeId} not online`);
     }
   });
 
   // Handle disconnection
   socket.on("disconnect", () => {
-    console.log(`${socket.user} disconnected`);
+    logMessage(`${socket.user} disconnected`);
 
     // Remove from users or hosts
     if (socket.userType === "user") {
@@ -103,6 +122,6 @@ IO.on("connection", (socket) => {
 });
 
 // Start the server
-server.listen(port, '0.0.0.0', () => {
-  console.log(`Server is running on port ${port}`);
+server.listen(port, "0.0.0.0", () => {
+  logMessage(`Server is running on port ${port}`);
 });
