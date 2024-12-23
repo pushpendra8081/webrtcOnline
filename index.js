@@ -23,9 +23,12 @@ IO.on("connection", (socket) => {
     let calleeId = data.calleeId;
     let sdpOffer = data.sdpOffer;
 
+    let callType= data.callType;
+
     socket.to(calleeId).emit("newCall", {
       callerId: socket.user,
       sdpOffer: sdpOffer,
+      callType: callType,
     });
   });
 
