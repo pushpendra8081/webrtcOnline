@@ -22,8 +22,17 @@ IO.on("connection", (socket) => {
   socket.on("makeCall", (data) => {
     let calleeId = data.calleeId;
     let sdpOffer = data.sdpOffer;
-
     let callType= data.callType;
+
+
+
+    // Log to confirm if callType is being received
+    if (callType) {
+      console.log(`Received callType: ${callType}`);
+    } else {
+      console.log("No callType received in makeCall event");
+    }
+
 
     socket.to(calleeId).emit("newCall", {
       callerId: socket.user,
