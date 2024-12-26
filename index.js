@@ -11,8 +11,7 @@ IO.use((socket, next) => {
   if (socket.handshake.query) {
     let callerId = socket.handshake.query.callerId;
     let callType = socket.handshake.query.callType;
-    socket.user = callerId;
-    socket.userCallType = callType;
+    socket.user = callerId,callType;
     next();
   }
 });
@@ -20,7 +19,7 @@ IO.use((socket, next) => {
 IO.on("connection", (socket) => {
   console.log(socket.user, "Connected");
   socket.join(socket.user);
-  socket.join(socket.userCallType);
+  socket.join(socket.user);
 
   socket.on("makeCall", (data) => {
     let calleeId = data.calleeId;
@@ -35,7 +34,7 @@ IO.on("connection", (socket) => {
     socket.to(calleeId).emit("newCall", {
       callerId: socket.user,
       sdpOffer: sdpOffer,
-      callType: callType.userCallType,
+      callType: callType.user,
     });
   });
 
