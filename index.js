@@ -11,7 +11,6 @@ IO.use((socket, next) => {
   if (socket.handshake.query) {
     socket.user = {
       callerId: socket.handshake.query.callerId,
-      callType: socket.handshake.query.callType,
     };
     next();
   } else {
@@ -26,11 +25,11 @@ IO.on("connection", (socket) => {
   socket.on("makeCall", (data) => {
     let calleeId = data.calleeId;
     let sdpOffer = data.sdpOffer;
+    let callType = data.callType;
 
 
     console.log("Received data in makeCall:", data);
 
-    let callType = data.callType || socket.user.callType;
    
 
     socket.to(calleeId).emit("newCall", {
