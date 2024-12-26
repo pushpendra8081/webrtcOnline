@@ -11,6 +11,15 @@ IO.use((socket, next) => {
   if (socket.handshake.query) {
     socket.user = {
       callerId: socket.handshake.query.callerId,
+    };
+    next();
+  } else {
+    next(new Error("Invalid handshake query"));
+  }
+});
+IO.usecall((socket, next) => {
+  if (socket.handshake.query) {
+    socket.userCall = {
       callType: socket.handshake.query.callType,
     };
     next();
@@ -23,6 +32,7 @@ IO.on("connection", (socket) => {
   console.log(socket.user, "Connected");
   socket.join(socket.user.callerId);
 
+
   socket.on("makeCall", (data) => {
     let calleeId = data.calleeId;
     let sdpOffer = data.sdpOffer;
@@ -30,7 +40,7 @@ IO.on("connection", (socket) => {
 
     console.log("Received data in makeCall:", data);
 
-    let callType = data.callType || socket.user.callType;
+    let callType = data.callType || socket.userCall.callType;
    
 
     socket.to(calleeId).emit("newCall", {
