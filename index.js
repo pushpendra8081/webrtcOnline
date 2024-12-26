@@ -58,4 +58,15 @@ IO.on("connection", (socket) => {
       iceCandidate: iceCandidate,
     });
   });
+  // Handle disconnection
+  socket.on("disconnect", (reason) => {
+    console.log(`${socket.user.callerId} disconnected. Reason: ${reason}`);
+    // Optionally notify other users or perform cleanup
+    socket.to(socket.user.callerId).emit("userDisconnected", {
+      callerId: socket.user.callerId,
+    });
+
+    // Remove user from any active rooms (optional)
+    socket.leave(socket.user.callerId);
+  });
 });
