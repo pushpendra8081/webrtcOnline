@@ -17,7 +17,7 @@ IO.use((socket, next) => {
     next(new Error("Invalid handshake query"));
   }
 });
-IO.usecall((socket, next) => {
+IO.use((socket, next) => {
   if (socket.handshake.query) {
     socket.userCall = {
       callType: socket.handshake.query.callType,
