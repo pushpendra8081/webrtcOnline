@@ -9,17 +9,19 @@ let IO = require("socket.io")(port, {
 
 IO.use((socket, next) => {
   if (socket.handshake.query) {
-    let callerId = socket.handshake.query.callerId;
-    let callType = socket.handshake.query.callType;
-    socket.user = callerId,callType;
+    socket.user = {
+      callerId: socket.handshake.query.callerId,
+      callType: socket.handshake.query.callType,
+    };
     next();
+  } else {
+    next(new Error("Invalid handshake query"));
   }
 });
 
 IO.on("connection", (socket) => {
   console.log(socket.user, "Connected");
-  socket.join(socket.user);
-  socket.join(socket.user);
+  socket.join(socket.user.callerId);
 
   socket.on("makeCall", (data) => {
     let calleeId = data.calleeId;
@@ -32,9 +34,9 @@ IO.on("connection", (socket) => {
    
 
     socket.to(calleeId).emit("newCall", {
-      callerId: socket.user,
+      callerId: socket.user.callerId,
       sdpOffer: sdpOffer,
-      callType: callType.user,
+      callType: callType.user.callType,
     });
   });
 
@@ -43,7 +45,7 @@ IO.on("connection", (socket) => {
     let sdpAnswer = data.sdpAnswer;
 
     socket.to(callerId).emit("callAnswered", {
-      callee: socket.user,
+      callee: socket.user.callType,
       sdpAnswer: sdpAnswer,
     });
   });
@@ -53,7 +55,7 @@ IO.on("connection", (socket) => {
     let iceCandidate = data.iceCandidate;
 
     socket.to(calleeId).emit("IceCandidate", {
-      sender: socket.user,
+      sender: socket.user.callerId,
       iceCandidate: iceCandidate,
     });
   });
