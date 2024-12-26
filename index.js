@@ -10,7 +10,9 @@ let IO = require("socket.io")(port, {
 IO.use((socket, next) => {
   if (socket.handshake.query) {
     let callerId = socket.handshake.query.callerId;
+    let callType = socket.handshake.query.callType;
     socket.user = callerId;
+    socket.callType = callType;
     next();
   }
 });
