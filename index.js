@@ -26,17 +26,17 @@ IO.on("connection", (socket) => {
   socket.on("makeCall", (data) => {
     let calleeId = data.calleeId;
     let sdpOffer = data.sdpOffer;
-    let callType= data.callType;
 
 
     console.log("Received data in makeCall:", data);
 
+    let callType = data.callType || socket.user.callType;
    
 
     socket.to(calleeId).emit("newCall", {
       callerId: socket.user.callerId,
       sdpOffer: sdpOffer,
-      callType: callType.user.callType,
+      callType: callType,
     });
   });
 
