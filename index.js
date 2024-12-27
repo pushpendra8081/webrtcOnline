@@ -58,6 +58,20 @@ IO.on("connection", (socket) => {
       iceCandidate: iceCandidate,
     });
   });
+
+
+  socket.on("leaveCall", (data) => {
+    const { callerId, calleeId } = data;
+  
+    console.log(`${socket.user.callerId} has left the call`);
+  
+    // Notify the other user
+    socket.to(calleeId).emit("callEnded", { userId: callerId });
+  
+    // Disconnect user from room
+    socket.leave(calleeId);
+  });
+
   // Handle disconnection
   socket.on("disconnect", (reason) => {
     console.log(`${socket.user.callerId} disconnected. Reason: ${reason}`);
