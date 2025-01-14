@@ -32,7 +32,14 @@ IO.on("connection", (socket) => {
 
     console.log("Received data in makeCall:", data);
 
-   
+    const response = {
+      callerId: socket.user.callerId,
+      sdpOffer: sdpOffer,
+      callType: callType,
+      calleeMainId: calleeMainId,
+    };
+    console.log("Sending response in newCall:", response);
+
 
     socket.to(calleeId).emit("newCall", {
       callerId: socket.user.callerId,
