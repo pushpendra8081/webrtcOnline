@@ -24,8 +24,10 @@ IO.on("connection", (socket) => {
 
   socket.on("makeCall", (data) => {
     let calleeId = data.calleeId;
+    let calleeMainId = data.calleeMainId;
     let sdpOffer = data.sdpOffer;
     let callType = data.callType;
+
 
 
     console.log("Received data in makeCall:", data);
@@ -36,6 +38,7 @@ IO.on("connection", (socket) => {
       callerId: socket.user.callerId,
       sdpOffer: sdpOffer,
       callType: callType,
+      calleeMainId: calleeMainId,
     });
   });
 
@@ -45,6 +48,7 @@ IO.on("connection", (socket) => {
 
     socket.to(callerId).emit("callAnswered", {
       callee: socket.user.callType,
+      calleeMainId: socket.user.calleeMainId,
       sdpAnswer: sdpAnswer,
     });
   });
@@ -60,17 +64,15 @@ IO.on("connection", (socket) => {
   });
 
 
-socket.on("leaveCall", (data) => {
-  const { callerId, calleeId } = data;
+  socket.on("leaveCall", (data) => {
+    const { callerId, calleeId } = data;
 
-  console.log(`${socket.user.callerId} has left the call`);
+    console.log(`${socket.user.callerId} has left the call`);
 
-  // Notify the other user
-  socket.to(calleeId).emit("callEnded", { userId: callerId });
+    // Notify the other user
+    socket.to(calleeId).emit("callEnded", { userId: callerId });
 
-  // Disconnect user from room
-  socket.leave(calleeId);
-});
-
-
+    // Disconnect user from room
+    socket.leave(calleeId);
+  });
 });
